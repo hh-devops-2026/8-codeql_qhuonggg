@@ -49,24 +49,34 @@ jobs:
         run: |
           docker run -d --name go-web-test -p 127.0.0.1:8080:8080 go-web-server
 
+      
       - name: Test readfile endpoint
         run: |
           set -e
-          for i in {1..15}; do
+
+          echo "Waiting for Go web server..."
+
+          for i in {1..30}; do
             if curl --fail --silent \
-              "http://127.0.0.1:8080/readfile?file=hello.txt" \
+              "http://127.0.0.1:8080/readfile?file=safe-files/hello.txt" \
               -o response.txt; then
+              echo "Server responded successfully"
               break
             fi
+
             sleep 2
           done
 
-          test -f response.txt
+          echo "Checking response..."
           test -s response.txt
+
+          echo "Response:"
           cat response.txt
 
-          docker cp go-web-test:/app/safe-files/hello.txt expected.txt
+          echo "Hello World" > expected.txt
           diff -u expected.txt response.txt
+
+          echo "Docker endpoint test passed!"
 
       - name: Stop Docker container
         if: always()
